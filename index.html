@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Train Math with Alan!</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Arial Rounded MT Bold', Arial, sans-serif;
+    background: linear-gradient(180deg, #87CEEB 0%, #87CEEB 60%, #4CAF50 60%, #4CAF50 80%, #8B6914 80%);
+    min-height: 100vh;
+    overflow-x: hidden;
+    user-select: none;
+  }
+
+  /* Sky clouds */
+  .cloud {
+    position: fixed;
+    background: white;
+    border-radius: 50px;
+    opacity: 0.9;
+    animation: cloudDrift linear infinite;
+  }
+  .cloud::before, .cloud::after {
+    content: '';
+    position: absolute;
+    background: white;
+    border-radius: 50%;
+  }
+  .cloud-1 { width: 120px; height: 40px; top: 8%; animation-duration: 25s; animation-delay: 0s; }
+  .cloud-1::before { width: 60px; height: 60px; top: -30px; left: 15px; }
+  .cloud-1::after { width: 45px; height: 45px; top: -20px; left: 50px; }
+  .cloud-2 { width: 90px; height: 30px; top: 18%; animation-duration: 35s; animation-delay: -10s; }
+  .cloud-2::before { width: 45px; height: 45px; top: -25px; left: 10px; }
+  .cloud-2::after { width: 35px; height: 35px; top: -15px; left: 38px; }
+  .cloud-3 { width: 150px; height: 50px; top: 5%; animation-duration: 40s; animation-delay: -20s; }
+  .cloud-3::before { width: 70px; height: 70px; top: -40px; left: 20px; }
+  .cloud-3::after { width: 55px; height: 55px; top: -25px; left: 70px; }
+  @keyframes cloudDrift {
+    from { left: -200px; }
+    to { left: 110vw; }
+  }
+
+  /* Sun */
+  .sun {
+    position: fixed;
+    top: 20px;
+    right: 60px;
+    width: 80px;
+    height: 80px;
+    background: #FFD700;
+    border-radius: 50%;
+    box-shadow: 0 0 30px #FFD700, 0 0 60px rgba(255,215,0,0.4);
+    animation: sunPulse 3s ease-in-out infinite;
+    z-index: 0;
+  }
+  @keyframes sunPulse {
+    0%, 100% { transform: scale(1); box-shadow: 0 0 30px #FFD700; }
+    50% { transform: scale(1.05); box-shadow: 0 0 50px #FFD700, 0 0 80px rgba(255,215,0,0.5); }
+  }
+
+  /* Hills */
+  .hills {
+    position: fixed;
+    bottom: 20%;
+    left: 0;
+    right: 0;
+    height: 120px;
+    z-index: 0;
+  }
+  .hill {
+    position: absolute;
+    border-radius: 50%;
+    background: #388E3C;
+  }
+  .hill-1 { width: 300px; height: 200px; bottom: 0; left: -50px; }
+  .hill-2 { width: 400px; height: 250px; bottom: 0; left: 200px; background: #2E7D32; }
+  .hill-3 { width: 350px; height: 220px; bottom: 0; left: 500px; }
+  .hill-4 { width: 300px; height: 180px; bottom: 0; right: 100px; background: #43A047; }
+  .hill-5 { width: 250px; height: 160px; bottom: 0; right: -30px; background: #2E7D32; }
+
+  /* Track */
+  .track-container {
+    position: fixed;
+    bottom: 22%;
+    left: 0;
+    right: 0;
+    height: 40px;
+    z-index: 2;
+  }
+  .track-rail {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 6px;
+    background: #5D4037;
+    border-radius: 3px;
+  }
+  .track-rail-top { top: 6px; }
+  .track-rail-bottom { bottom: 6px; }
+  .track-ties {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: repeating-linear-gradient(
+      90deg,
+      transparent 0px,
+      transparent 25px,
+      #6D4C41 25px,
+      #6D4C41 45px
+    );
+  }
+
+  /* Game container */
+  .game {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    padding: 10px;
+  }
+
+  /* Header */
+  .header {
+    background: rgba(255,255,255,0.92);
+    border-radius: 20px;
+    padding: 10px 25px;
+    margin-bottom: 8px;
+    text-align: center;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    width: 100%;
+    max-width: 600px;
+  }
+  .title {
+    font-size: 28px;
+    color: #1565C0;
+    font-weight: bold;
+    text-shadow: 2px 2px 0 rgba(0,0,0,0.1);
+  }
+  .stars-row {
+    font-size: 28px;
+    margin-top: 4px;
+    min-height: 36px;
+    letter-spacing: 4px;
+  }
+  .star-empty { opacity: 0.25; }
+  .progress-text {
+    font-size: 14px;
+    color: #666;
+    margin-top: 2px;
+  }
+
+  /* Train scene */
+  .train-scene {
+    width: 100%;
+    max-width: 700px;
+    height: 180px;
+    position: relative;
+    margin-bottom: 5px;
+  }
+
+  /* Train */
+  .train {
+    position: absolute;
+    bottom: 40px;
+    display: flex;
+    align-items: flex-end;
+    gap: 4px;
+    transition: left 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+  .train.chug-in {
+    animation: chugIn 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  }
+  .train.celebrate {
+    animation: trainCelebrate 0.5s ease-in-out forwards;
+  }
+  .train.shake {
+    animation: trainShake 0.5s ease-in-out;
+  }
+
+  @keyframes chugIn {
+    from { transform: translateX(-120%); }
+    to { transform: translateX(0); }
+  }
+  @keyframes trainCelebrate {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(120vw); }
+  }
+  @keyframes trainShake {
+    0%, 100% { transform: translateX(0); }
+    15% { transform: translateX(-12px); }
+    30% { transform: translateX(10px); }
+    45% { transform: translateX(-8px); }
+    60% { transform: translateX(6px); }
+    75% { transform: translateX(-4px); }
+    90% { transform: translateX(2px); }
+  }
+
+  /* Engine */
+  .engine {
+    position: relative;
+    width: 90px;
+    height: 70px;
+    flex-shrink: 0;
+  }
+  .engine-body {
+    position: absolute;
+    bottom: 18px;
+    left: 0;
+    right: 0;
+    height: 45px;
+    background: #E53935;
+    border-radius: 8px 16px 4px 4px;
+    border: 3px solid #B71C1C;
+  }
+  .engine-cabin {
+    position: absolute;
+    bottom: 43px;
+    right: 8px;
+    width: 35px;
+    height: 28px;
+    background: #C62828;
+    border-radius: 6px 6px 0 0;
+    border: 3px solid #B71C1C;
+    border-bottom: none;
+  }
+  .engine-cabin-window {
+    position: absolute;
+    top: 5px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 18px;
+    height: 14px;
+    background: #B3E5FC;
+    border-radius: 3px;
+    border: 2px solid #0277BD;
+  }
+  .engine-chimney {
+    position: absolute;
+    bottom: 63px;
+    left: 12px;
+    width: 14px;
+    height: 20px;
+    background: #424242;
+    border-radius: 3px 3px 0 0;
+    border: 2px solid #212121;
+  }
+  .engine-chimney::after {
+    content: '';
+    position: absolute;
+    top: -6px;
+    left: -4px;
+    width: 22px;
+    height: 8px;
+    background: #212121;
+    border-radius: 4px 4px 0 0;
+  }
+  .engine-light {
+    position: absolute;
+    bottom: 30px;
+    right: 2px;
+    width: 14px;
+    height: 10px;
+    background: #FFD600;
+    border-radius: 0 6px 6px 0;
+    border: 2px solid #F57F17;
+    box-shadow: 0 0 8px #FFD600;
+  }
+  .engine-number {
+    position: absolute;
+    bottom: 28px;
+    left: 8px;
+    font-size: 16px;
+    font-weight: bold;
+    color: #FFD600;
+    text-shadow: 1px 1px 0 #000;
+  }
+  .wheel {
+    position: absolute;
+    border-radius: 50%;
+    background: #212121;
+    border: 3px solid #757575;
+    animation: spin 0.5s linear infinite;
+  }
+  .wheel::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 35%;
+    height: 35%;
+    background: #9E9E9E;
+    border-radius: 50%;
+  }
+  .wheel-big { width: 26px; height: 26px; bottom: -5px; left: 16px; }
+  .wheel-mid { width: 22px; height: 22px; bottom: -3px; left: 48px; }
+  .wheel-sm { width: 18px; height: 18px; bottom: -1px; right: 8px; }
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  /* Steam puffs */
+  .steam {
+    position: absolute;
+    bottom: 80px;
+    left: 14px;
+    display: flex;
+    flex-direction: column-reverse;
+    gap: 2px;
+    pointer-events: none;
+  }
+  .puff {
+    width: 12px;
+    height: 12px;
+    background: rgba(255,255,255,0.85);
+    border-radius: 50%;
+    animation: puffUp 1.2s ease-out infinite;
+  }
+  .puff:nth-child(2) { animation-delay: 0.4s; width: 16px; height: 16px; }
+  .puff:nth-child(3) { animation-delay: 0.8s; width: 10px; height: 10px; }
+  @keyframes puffUp {
+    0% { opacity: 1; transform: translateY(0) scale(1); }
+    100% { opacity: 0; transform: translateY(-40px) scale(2); }
+  }
+
+  /* Cargo car */
+  .car {
+    position: relative;
+    width: 58px;
+    height: 52px;
+    flex-shrink: 0;
+  }
+  .car-body {
+    position: absolute;
+    bottom: 14px;
+    left: 2px;
+    right: 2px;
+    height: 34px;
+    border-radius: 4px;
+    border: 3px solid rgba(0,0,0,0.25);
+  }
+  .car-number {
+    position: absolute;
+    bottom: 20px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-size: 18px;
+    font-weight: bold;
+    color: white;
+    text-shadow: 1px 1px 0 rgba(0,0,0,0.5);
+  }
+  .car-wheel-l, .car-wheel-r {
+    position: absolute;
+    bottom: -2px;
+    width: 16px;
+    height: 16px;
+    background: #212121;
+    border-radius: 50%;
+    border: 2px solid #757575;
+    animation: spin 0.5s linear infinite;
+  }
+  .car-wheel-l { left: 6px; }
+  .car-wheel-r { right: 6px; }
+  .car-wheel-l::after, .car-wheel-r::after {
+    content: '';
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%,-50%);
+    width: 5px; height: 5px;
+    background: #9E9E9E;
+    border-radius: 50%;
+  }
+  .car-coupler {
+    position: absolute;
+    bottom: 20px;
+    left: -4px;
+    width: 6px;
+    height: 8px;
+    background: #757575;
+    border-radius: 2px;
+  }
+
+  /* Car colors */
+  .car-yellow .car-body { background: #FDD835; }
+  .car-blue .car-body { background: #1E88E5; }
+  .car-green .car-body { background: #43A047; }
+  .car-orange .car-body { background: #FB8C00; }
+  .car-purple .car-body { background: #8E24AA; }
+
+  /* Subtraction: uncoupled cars sliding away */
+  .car.uncoupled {
+    animation: slideAway 1s ease-in forwards;
+  }
+  @keyframes slideAway {
+    0% { transform: translateX(0); opacity: 1; }
+    50% { transform: translateX(80px); opacity: 0.7; }
+    100% { transform: translateX(200px); opacity: 0; }
+  }
+
+  /* Question card */
+  .question-card {
+    background: rgba(255,255,255,0.95);
+    border-radius: 20px;
+    padding: 14px 20px;
+    margin-bottom: 8px;
+    text-align: center;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    width: 100%;
+    max-width: 600px;
+  }
+  .question-text {
+    font-size: 22px;
+    color: #212121;
+    line-height: 1.3;
+    font-weight: bold;
+  }
+  .question-emoji {
+    font-size: 30px;
+    margin-bottom: 4px;
+  }
+
+  /* Answer buttons */
+  .answers {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    width: 100%;
+    max-width: 480px;
+    padding: 0 10px;
+  }
+  .answer-btn {
+    padding: 20px 10px;
+    font-size: 36px;
+    font-weight: bold;
+    border: none;
+    border-radius: 18px;
+    cursor: pointer;
+    transition: transform 0.1s, box-shadow 0.1s;
+    box-shadow: 0 6px 0 rgba(0,0,0,0.25);
+    color: white;
+    text-shadow: 2px 2px 0 rgba(0,0,0,0.2);
+    position: relative;
+    overflow: hidden;
+  }
+  .answer-btn:active {
+    transform: translateY(3px);
+    box-shadow: 0 3px 0 rgba(0,0,0,0.25);
+  }
+  .answer-btn:nth-child(1) { background: #E53935; box-shadow: 0 6px 0 #B71C1C; }
+  .answer-btn:nth-child(2) { background: #1E88E5; box-shadow: 0 6px 0 #0D47A1; }
+  .answer-btn:nth-child(3) { background: #43A047; box-shadow: 0 6px 0 #1B5E20; }
+  .answer-btn:nth-child(4) { background: #FB8C00; box-shadow: 0 6px 0 #E65100; }
+  .answer-btn:nth-child(1):active { box-shadow: 0 3px 0 #B71C1C; }
+  .answer-btn:nth-child(2):active { box-shadow: 0 3px 0 #0D47A1; }
+  .answer-btn:nth-child(3):active { box-shadow: 0 3px 0 #1B5E20; }
+  .answer-btn:nth-child(4):active { box-shadow: 0 3px 0 #E65100; }
+  .answer-btn.correct-flash {
+    animation: correctFlash 0.4s ease;
+  }
+  .answer-btn.wrong-flash {
+    animation: wrongFlash 0.4s ease;
+  }
+  @keyframes correctFlash {
+    0%, 100% { filter: brightness(1); }
+    50% { filter: brightness(1.6); }
+  }
+  @keyframes wrongFlash {
+    0%, 100% { filter: brightness(1); }
+    50% { filter: brightness(0.6) saturate(0.5); }
+  }
+
+  /* Celebration screen */
+  .celebration {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(135deg, #1565C0, #6A1B9A);
+    z-index: 100;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: white;
+  }
+  .celebration.show { display: flex; }
+  .celebration h1 {
+    font-size: 52px;
+    text-shadow: 3px 3px 0 rgba(0,0,0,0.3);
+    margin-bottom: 10px;
+    animation: bounce 0.5s ease-in-out infinite alternate;
+  }
+  .celebration-stars {
+    font-size: 56px;
+    margin: 10px 0;
+    animation: starSpin 1s linear infinite;
+  }
+  .celebration p {
+    font-size: 26px;
+    margin: 8px 0;
+    opacity: 0.95;
+  }
+  .play-again-btn {
+    margin-top: 20px;
+    padding: 18px 50px;
+    font-size: 28px;
+    font-weight: bold;
+    background: #FFD600;
+    color: #212121;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    box-shadow: 0 8px 0 #F57F17;
+    transition: transform 0.1s;
+  }
+  .play-again-btn:active {
+    transform: translateY(4px);
+    box-shadow: 0 4px 0 #F57F17;
+  }
+  .confetti-piece {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+    animation: confettiFall linear forwards;
+  }
+  @keyframes confettiFall {
+    0% { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+  }
+  @keyframes bounce {
+    from { transform: translateY(0); }
+    to { transform: translateY(-10px); }
+  }
+  @keyframes starSpin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  /* Feedback message */
+  .feedback {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    background: rgba(0,0,0,0.85);
+    color: white;
+    font-size: 32px;
+    font-weight: bold;
+    padding: 16px 30px;
+    border-radius: 16px;
+    z-index: 50;
+    pointer-events: none;
+    transition: transform 0.2s, opacity 0.3s;
+    opacity: 0;
+    white-space: nowrap;
+  }
+  .feedback.show {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+
+  /* Station sign */
+  .station-sign {
+    position: absolute;
+    top: 10px;
+    right: 20px;
+    background: #795548;
+    color: #FFD600;
+    font-size: 13px;
+    font-weight: bold;
+    padding: 5px 12px;
+    border-radius: 6px;
+    border: 3px solid #4E342E;
+    box-shadow: 2px 2px 0 rgba(0,0,0,0.3);
+  }
+  .station-post {
+    position: absolute;
+    top: 42px;
+    right: 46px;
+    width: 6px;
+    height: 30px;
+    background: #4E342E;
+  }
+</style>
+</head>
+<body>
+
+<!-- Sky decorations -->
+<div class="sun"></div>
+<div class="cloud cloud-1"></div>
+<div class="cloud cloud-2"></div>
+<div class="cloud cloud-3"></div>
+<div class="hills">
+  <div class="hill hill-1"></div>
+  <div class="hill hill-2"></div>
+  <div class="hill hill-3"></div>
+  <div class="hill hill-4"></div>
+  <div class="hill hill-5"></div>
+</div>
+<div class="track-container">
+  <div class="track-ties"></div>
+  <div class="track-rail track-rail-top"></div>
+  <div class="track-rail track-rail-bottom"></div>
+</div>
+
+<!-- Game UI -->
+<div class="game">
+  <div class="header">
+    <div class="title">🚂 Train Math with Alan! 🚂</div>
+    <div class="stars-row" id="starsRow"></div>
+    <div class="progress-text" id="progressText">Question 1 of 10</div>
+  </div>
+
+  <div class="train-scene" id="trainScene">
+    <div class="station-post"></div>
+    <div class="station-sign">STATION</div>
+    <!-- Train rendered by JS -->
+  </div>
+
+  <div class="question-card">
+    <div class="question-emoji" id="questionEmoji">🚂</div>
+    <div class="question-text" id="questionText">Loading...</div>
+  </div>
+
+  <div class="answers" id="answersGrid"></div>
+</div>
+
+<!-- Feedback message -->
+<div class="feedback" id="feedback"></div>
+
+<!-- Celebration -->
+<div class="celebration" id="celebration">
+  <div class="celebration-stars">⭐⭐⭐⭐⭐</div>
+  <h1>ALL ABOARD!</h1>
+  <p>Amazing job, Alan! 🎉</p>
+  <p id="celebMsg">You answered all 10 questions!</p>
+  <button class="play-again-btn" onclick="startGame()">Play Again! 🚂</button>
+</div>
+
+<script>
+// ─── Audio Engine ───────────────────────────────────────────────────────────
+const AudioContext = window.AudioContext || window.webkitAudioContext;
+let ctx;
+
+function getAudioCtx() {
+  if (!ctx) ctx = new AudioContext();
+  if (ctx.state === 'suspended') ctx.resume();
+  return ctx;
+}
+
+function playWhistle() {
+  const ac = getAudioCtx();
+  const now = ac.currentTime;
+  // Choo-choo: short high, brief pause, long high-low
+  [[0, 0.12, 880, 940], [0.18, 0.10, 880, 940], [0.34, 0.35, 880, 660]].forEach(([t, dur, f1, f2]) => {
+    const osc = ac.createOscillator();
+    const gain = ac.createGain();
+    osc.connect(gain); gain.connect(ac.destination);
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(f1, now + t);
+    osc.frequency.linearRampToValueAtTime(f2, now + t + dur);
+    gain.gain.setValueAtTime(0, now + t);
+    gain.gain.linearRampToValueAtTime(0.3, now + t + 0.02);
+    gain.gain.setValueAtTime(0.3, now + t + dur - 0.02);
+    gain.gain.linearRampToValueAtTime(0, now + t + dur);
+    osc.start(now + t);
+    osc.stop(now + t + dur + 0.05);
+  });
+}
+
+function playBrake() {
+  const ac = getAudioCtx();
+  const now = ac.currentTime;
+  // Screech
+  const osc = ac.createOscillator();
+  const gain = ac.createGain();
+  const filter = ac.createBiquadFilter();
+  filter.type = 'bandpass';
+  filter.frequency.value = 1200;
+  osc.connect(filter); filter.connect(gain); gain.connect(ac.destination);
+  osc.type = 'sawtooth';
+  osc.frequency.setValueAtTime(800, now);
+  osc.frequency.linearRampToValueAtTime(300, now + 0.5);
+  gain.gain.setValueAtTime(0.25, now);
+  gain.gain.linearRampToValueAtTime(0, now + 0.5);
+  osc.start(now);
+  osc.stop(now + 0.55);
+  // Clank
+  const buf = ac.createBuffer(1, ac.sampleRate * 0.1, ac.sampleRate);
+  const data = buf.getChannelData(0);
+  for (let i = 0; i < data.length; i++) data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (ac.sampleRate * 0.02));
+  const src = ac.createBufferSource();
+  src.buffer = buf;
+  const g2 = ac.createGain();
+  g2.gain.value = 0.4;
+  src.connect(g2); g2.connect(ac.destination);
+  src.start(now + 0.05);
+}
+
+function playCelebration() {
+  const ac = getAudioCtx();
+  const now = ac.currentTime;
+  const melody = [523, 659, 784, 1047, 784, 1047, 1175, 1047];
+  melody.forEach((freq, i) => {
+    const osc = ac.createOscillator();
+    const gain = ac.createGain();
+    osc.connect(gain); gain.connect(ac.destination);
+    osc.type = 'triangle';
+    osc.frequency.value = freq;
+    const t = now + i * 0.15;
+    gain.gain.setValueAtTime(0, t);
+    gain.gain.linearRampToValueAtTime(0.25, t + 0.02);
+    gain.gain.linearRampToValueAtTime(0, t + 0.13);
+    osc.start(t);
+    osc.stop(t + 0.15);
+  });
+}
+
+function playChugging() {
+  const ac = getAudioCtx();
+  const now = ac.currentTime;
+  for (let i = 0; i < 4; i++) {
+    const t = now + i * 0.18;
+    const buf = ac.createBuffer(1, ac.sampleRate * 0.08, ac.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let j = 0; j < data.length; j++) data[j] = (Math.random() * 2 - 1) * Math.exp(-j / (ac.sampleRate * 0.01)) * 0.5;
+    const src = ac.createBufferSource();
+    src.buffer = buf;
+    const g = ac.createGain();
+    g.gain.value = 0.3;
+    src.connect(g); g.connect(ac.destination);
+    src.start(t);
+  }
+}
+
+// ─── Game State ──────────────────────────────────────────────────────────────
+const CAR_COLORS = ['car-yellow', 'car-blue', 'car-green', 'car-orange', 'car-purple'];
+let score = 0;
+let questionNum = 0;
+let correctAnswer = 0;
+let currentQuestion = null;
+let answering = false;
+
+function randInt(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function generateQuestion() {
+  const type = Math.random() < 0.55 ? 'add' : 'sub';
+  if (type === 'add') {
+    const a = randInt(1, 4);
+    const b = randInt(1, 5 - a + 1 > 4 ? 4 : 5 - a);
+    const ans = a + b;
+    return { type: 'add', a, b, answer: ans,
+      text: `Train A has ${a} car${a>1?'s':''}. Train B has ${b} car${b>1?'s':''}.\nHow many cars altogether?`,
+      emoji: '🚂+🚂' };
+  } else {
+    const total = randInt(3, 8);
+    const drop = randInt(1, Math.min(total - 1, 4));
+    const ans = total - drop;
+    return { type: 'sub', total, drop, answer: ans,
+      text: `The train has ${total} cars.\nIt dropped off ${drop} at the station.\nHow many cars are left?`,
+      emoji: '🚂➡️🏠' };
+  }
+}
+
+function generateAnswers(correct) {
+  const wrong = new Set();
+  while (wrong.size < 3) {
+    const w = randInt(Math.max(1, correct - 4), Math.min(9, correct + 4));
+    if (w !== correct) wrong.add(w);
+  }
+  return shuffle([correct, ...wrong]);
+}
+
+// ─── Rendering ───────────────────────────────────────────────────────────────
+function buildEngine(label) {
+  return `
+    <div class="engine">
+      <div class="engine-chimney"></div>
+      <div class="steam">
+        <div class="puff"></div>
+        <div class="puff"></div>
+        <div class="puff"></div>
+      </div>
+      <div class="engine-body">
+        <span class="engine-number">${label}</span>
+        <div class="engine-light"></div>
+      </div>
+      <div class="engine-cabin">
+        <div class="engine-cabin-window"></div>
+      </div>
+      <div class="wheel wheel-big"></div>
+      <div class="wheel wheel-mid"></div>
+      <div class="wheel wheel-sm"></div>
+    </div>`;
+}
+
+function buildCar(colorClass, num, id, uncoupled) {
+  return `
+    <div class="car ${colorClass}${uncoupled ? ' uncoupled' : ''}" id="${id}">
+      <div class="car-coupler"></div>
+      <div class="car-body"></div>
+      <div class="car-number">${num > 0 ? num : ''}</div>
+      <div class="car-wheel-l"></div>
+      <div class="car-wheel-r"></div>
+    </div>`;
+}
+
+function renderTrain(q) {
+  const scene = document.getElementById('trainScene');
+  // Clear previous trains
+  const old = scene.querySelectorAll('.train');
+  old.forEach(t => t.remove());
+
+  if (q.type === 'add') {
+    // Train A (comes from left)
+    let carsA = '';
+    for (let i = 0; i < q.a; i++) {
+      carsA += buildCar(CAR_COLORS[i % CAR_COLORS.length], i + 1, `carA${i}`, false);
+    }
+    const trainA = document.createElement('div');
+    trainA.className = 'train chug-in';
+    trainA.style.left = '5%';
+    trainA.style.animationDelay = '0s';
+    trainA.innerHTML = buildEngine('A') + carsA;
+    scene.appendChild(trainA);
+
+    // Train B (comes from left, a bit behind)
+    let carsB = '';
+    for (let i = 0; i < q.b; i++) {
+      carsB += buildCar(CAR_COLORS[(i + 2) % CAR_COLORS.length], i + 1, `carB${i}`, false);
+    }
+    const trainB = document.createElement('div');
+    trainB.className = 'train chug-in';
+    trainB.style.left = '5%';
+    trainB.style.top = '30px';
+    trainB.style.animationDelay = '0.3s';
+    trainB.innerHTML = buildEngine('B') + carsB;
+    scene.appendChild(trainB);
+
+  } else {
+    // Subtraction: one train, some cars will uncouple
+    let cars = '';
+    for (let i = 0; i < q.total; i++) {
+      const uncoupled = i >= q.total - q.drop;
+      cars += buildCar(CAR_COLORS[i % CAR_COLORS.length], i + 1, `carS${i}`, false);
+    }
+    const train = document.createElement('div');
+    train.className = 'train chug-in';
+    train.style.left = '5%';
+    train.innerHTML = buildEngine('🚂') + cars;
+    scene.appendChild(train);
+
+    // After 1.5s, animate the dropped cars
+    setTimeout(() => {
+      for (let i = q.total - q.drop; i < q.total; i++) {
+        const car = document.getElementById(`carS${i}`);
+        if (car) car.classList.add('uncoupled');
+      }
+    }, 1500);
+  }
+}
+
+// ─── Stars ───────────────────────────────────────────────────────────────────
+function updateStars() {
+  const row = document.getElementById('starsRow');
+  let html = '';
+  for (let i = 0; i < 10; i++) {
+    html += `<span class="${i < score ? '' : 'star-empty'}">⭐</span>`;
+  }
+  row.innerHTML = html;
+  document.getElementById('progressText').textContent = `Question ${questionNum} of 10`;
+}
+
+// ─── Feedback ────────────────────────────────────────────────────────────────
+function showFeedback(msg, duration = 900) {
+  const el = document.getElementById('feedback');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), duration);
+}
+
+// ─── Questions ───────────────────────────────────────────────────────────────
+function nextQuestion() {
+  if (questionNum >= 10) {
+    showCelebration();
+    return;
+  }
+  questionNum++;
+  answering = false;
+  currentQuestion = generateQuestion();
+  correctAnswer = currentQuestion.answer;
+
+  document.getElementById('questionEmoji').textContent = currentQuestion.emoji;
+  document.getElementById('questionText').textContent = currentQuestion.text;
+
+  const answers = generateAnswers(correctAnswer);
+  const grid = document.getElementById('answersGrid');
+  grid.innerHTML = '';
+  answers.forEach(ans => {
+    const btn = document.createElement('button');
+    btn.className = 'answer-btn';
+    btn.textContent = ans;
+    btn.onclick = () => handleAnswer(ans, btn);
+    grid.appendChild(btn);
+  });
+
+  renderTrain(currentQuestion);
+  updateStars();
+  playChugging();
+}
+
+function handleAnswer(ans, btn) {
+  if (answering) return;
+  answering = true;
+
+  if (ans === correctAnswer) {
+    score++;
+    btn.classList.add('correct-flash');
+    showFeedback('🎉 GREAT JOB! 🎉', 1200);
+    playWhistle();
+    // Celebrate train
+    setTimeout(() => {
+      const trains = document.querySelectorAll('.train');
+      trains.forEach(t => { t.classList.remove('chug-in'); t.classList.add('celebrate'); });
+    }, 200);
+    setTimeout(() => nextQuestion(), 2000);
+  } else {
+    btn.classList.add('wrong-flash');
+    showFeedback('Try again! 🚂', 900);
+    playBrake();
+    const trains = document.querySelectorAll('.train');
+    trains.forEach(t => { t.classList.remove('chug-in'); t.classList.add('shake'); });
+    setTimeout(() => {
+      trains.forEach(t => t.classList.remove('shake'));
+      btn.classList.remove('wrong-flash');
+      answering = false;
+    }, 800);
+  }
+}
+
+// ─── Celebration ─────────────────────────────────────────────────────────────
+function showCelebration() {
+  const cel = document.getElementById('celebration');
+  document.getElementById('celebMsg').textContent = `You got ${score} out of 10! Amazing! 🌟`;
+  cel.classList.add('show');
+  playCelebration();
+  // Confetti
+  for (let i = 0; i < 60; i++) {
+    const c = document.createElement('div');
+    c.className = 'confetti-piece';
+    c.style.left = Math.random() * 100 + 'vw';
+    c.style.top = '-20px';
+    c.style.background = ['#E53935','#1E88E5','#43A047','#FDD835','#8E24AA','#FB8C00'][Math.floor(Math.random()*6)];
+    c.style.animationDuration = (1.5 + Math.random() * 2) + 's';
+    c.style.animationDelay = (Math.random() * 1.5) + 's';
+    c.style.transform = `rotate(${Math.random()*360}deg)`;
+    cel.appendChild(c);
+    setTimeout(() => c.remove(), 4000);
+  }
+}
+
+function startGame() {
+  score = 0;
+  questionNum = 0;
+  const cel = document.getElementById('celebration');
+  cel.classList.remove('show');
+  // Clear confetti
+  cel.querySelectorAll('.confetti-piece').forEach(c => c.remove());
+  nextQuestion();
+}
+
+// ─── Boot ─────────────────────────────────────────────────────────────────────
+window.addEventListener('load', () => {
+  // Unlock audio on first touch
+  document.body.addEventListener('touchstart', () => getAudioCtx(), { once: true });
+  startGame();
+});
+</script>
+</body>
+</html>
